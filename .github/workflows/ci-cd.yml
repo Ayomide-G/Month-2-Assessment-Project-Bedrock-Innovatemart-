@@ -1,0 +1,19 @@
+name: CI/CD Pipeline
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build and Push
+      run: |
+        aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 659041207523.dkr.ecr.us-west-2.amazonaws.com
+        docker build -t innovatemart-app .
+        docker tag innovatemart-app:latest 659041207523.dkr.ecr.us-west-2.amazonaws.com/innovatemart-app:latest
+        docker push 659041207523.dkr.ecr.us-west-2.amazonaws.com/innovatemart-app:latest
+    - name: Deploy to EKS
+      run: |
+        aws eks update-kubeconfig --region us-west-2 --name innovateMart-cluster
+        kubectl apply -f deployment.yaml
